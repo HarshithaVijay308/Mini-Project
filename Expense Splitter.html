@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expense Splitter</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #89f7fe, #66a6ff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(12px);
+            padding: 30px;
+            width: 360px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        h2 {
+            text-align: center;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 14px;
+            color: #374151;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 6px;
+            margin-bottom: 14px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .result {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.4);
+            padding: 12px;
+            border-radius: 8px;
+            color: #111827;
+            font-weight: 500;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+    <h2>Expense Splitter</h2>
+
+    <label>Total Expense (₹)</label>
+    <input type="number" id="total" placeholder="Enter total amount">
+
+    <label>Number of People</label>
+    <input type="number" id="people" placeholder="Enter number of people">
+
+    <label>Amount You Paid (₹)</label>
+    <input type="number" id="paid" placeholder="Enter amount paid">
+
+    <button onclick="splitExpense()">Split Expense</button>
+
+    <div class="result" id="output"></div>
+</div>
+
+<script>
+function splitExpense() {
+    let total = Number(document.getElementById("total").value);
+    let people = Number(document.getElementById("people").value);
+    let paid = Number(document.getElementById("paid").value);
+
+    if (total <= 0 || people <= 0) {
+        document.getElementById("output").innerHTML =
+            "Please enter valid values";
+        return;
+    }
+
+    let share = total / people;
+    let balance = paid - share;
+
+    if (balance > 0) {
+        document.getElementById("output").innerHTML =
+            `Each person pays ₹${share.toFixed(2)}<br>
+             You will receive ₹${balance.toFixed(2)}`;
+    }
+    else if (balance < 0) {
+        document.getElementById("output").innerHTML =
+            `Each person pays ₹${share.toFixed(2)}<br>
+             You owe ₹${Math.abs(balance).toFixed(2)}`;
+    }
+    else {
+        document.getElementById("output").innerHTML =
+            `Everyone is settled equally 😊`;
+    }
+}
+</script>
+
+</body>
+</html>
