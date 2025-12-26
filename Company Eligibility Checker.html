@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Company Eligibility Checker</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 600px; margin: auto; }
+        input, select { margin: 5px 0; padding: 5px; width: 100%; }
+        button { padding: 8px 12px; margin-top: 10px; cursor: pointer; }
+        #result { margin-top: 20px; font-weight: bold; }
+        .eligible { color: green; }
+        .not-eligible { color: red; }
+        h2 { text-align: center; }
+        label { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Company Eligibility Checker</h2>
+
+    <label>Full Name:</label>
+    <input type="text" id="name" placeholder="Your Name"><br>
+
+    <label>Email:</label>
+    <input type="email" id="email" placeholder="Your Email"><br>
+
+    <label>Year of Study:</label>
+    <select id="year">
+        <option value="1">1st Year</option>
+        <option value="2">2nd Year</option>
+        <option value="3">3rd Year</option>
+        <option value="4">4th Year</option>
+    </select><br>
+
+    <label>Gender:</label>
+    <select id="gender">
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+    </select><br>
+
+    <label>CGPA:</label>
+    <input type="number" id="cgpa" step="0.01" min="0" max="10"><br>
+
+    <label>Backlogs:</label>
+    <input type="number" id="backlogs" min="0"><br>
+
+    <label>Department:</label>
+    <select id="department">
+        <option value="CSE">CSE</option>
+        <option value="ECE">ECE</option>
+        <option value="MECH">MECH</option>
+        <option value="IT">IT</option>
+        <option value="EEE">EEE</option>
+        <option value="CIVIL">CIVIL</option>
+    </select><br>
+
+    <label>Skills (comma separated):</label>
+    <input type="text" id="skills" placeholder="e.g. Python,Java,ML"><br>
+
+    <label>Resume URL:</label>
+    <input type="text" id="resume" placeholder="Paste your resume link"><br>
+
+    <button onclick="checkAllCompanies()">Check Eligibility</button>
+    <button onclick="resetForm()">Reset</button>
+
+    <div id="result"></div>
+
+    <script>
+        const companies = {
+            "TCS": { 
+                minCgpa: 7, maxBacklogs: 0, departments: ["CSE","ECE","IT"], skills: ["Java","Python"], allowedYears: [3,4] 
+            },
+            "Infosys": { 
+                minCgpa: 7.5, maxBacklogs: 1, departments: ["CSE","ECE","MECH","EEE"], skills: ["Java","ML"], allowedYears: [3,4] 
+            },
+            "Accenture": { 
+                minCgpa: 6.5, maxBacklogs: 0, departments: ["CSE","MECH","CIVIL"], skills: ["Python","SQL"], allowedYears: [3,4] 
+            }
+        };
+
+        function checkAllCompanies() {
+            const name = document.getElementById("name").value;
+            const email = document.getElementById("email").value;
+            const year = parseInt(document.getElementById("year").value);
+            const gender = document.getElementById("gender").value;
+            const cgpa = parseFloat(document.getElementById("cgpa").value);
+            const backlogs = parseInt(document.getElementById("backlogs").value);
+            const dept = document.getElementById("department").value;
+            const skillsInput = document.getElementById("skills").value.toLowerCase().split(',').map(s => s.trim());
+            const resume = document.getElementById("resume").value;
+
+            let output = `<h3>Eligibility Results for ${name} (${email})</h3>`;
+            output += `<p>Year: ${year} | Department: ${dept} | Gender: ${gender}</p>`;
+
+            for (let companyName in companies) {
+                const comp = companies[companyName];
+                
+                // Skill matching
+                const requiredSkills = comp.skills.map(s => s.toLowerCase());
+                let matchedSkills = skillsInput.filter(skill => requiredSkills.includes(skill));
+                let skillMatchPercent = Math.round((matchedSkills.length / requiredSkills.length) * 100);
+
+                // Check eligibility
+                let eligible = cgpa >= comp.minCgpa && backlogs <= comp.maxBacklogs && comp.departments.includes(dept) && skillMatchPercent > 0 && comp.allowedYears.includes(year);
+
+                // Eligibility score
+                let score = 0;
+                score += Math.min(cgpa / 10 * 40, 40); // CGPA weight 40
+                score += Math.min((comp.maxBacklogs - backlogs + 1)/(comp.maxBacklogs + 1) * 30, 30); // Backlogs weight 30
+                score += (comp.departments.includes(dept) ? 20 : 0); // Department weight 20
+                score += skillMatchPercent / 100 * 10; // Skill weight 10
+                score = Math.round(score);
+
+                // Reason
+                let reason = [];
+                if (cgpa < comp.minCgpa) reason.push("CGPA below requirement");
+                if (backlogs > comp.maxBacklogs) reason.push("Too many backlogs");
+                if (!comp.departments.includes(dept)) reason.push("Department not eligible");
+                if (skillMatchPercent === 0) reason.push("No required skills");
+                if (!comp.allowedYears.includes(year)) reason.push("Year of study not eligible");
+
+                output += `<p><b>${companyName}</b>: 
+                    <span class="${eligible ? 'eligible' : 'not-eligible'}">
+                        ${eligible ? 'Eligible ✅' : 'Not Eligible ❌'}
+                    </span><br>
+                    Eligibility Score: ${score}/100<br>
+                    Skill Match: ${skillMatchPercent}%<br>
+                    ${reason.length > 0 ? 'Reason: ' + reason.join(', ') : ''}
+                    ${resume ? '<br>Resume: <a href="' + resume + '" target="_blank">View</a>' : ''}
+                    </p>`;
+            }
+
+            document.getElementById("result").innerHTML = output;
+        }
+
+        function resetForm() {
+            document.getElementById("name").value = '';
+            document.getElementById("email").value = '';
+            document.getElementById("year").value = '1';
+            document.getElementById("gender").value = 'Male';
+            document.getElementById("cgpa").value = '';
+            document.getElementById("backlogs").value = '';
+            document.getElementById("department").value = 'CSE';
+            document.getElementById("skills").value = '';
+            document.getElementById("resume").value = '';
+            document.getElementById("result").innerHTML = '';
+        }
+    </script>
+</body>
+</html>

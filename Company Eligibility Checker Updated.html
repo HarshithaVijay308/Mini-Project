@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Company Eligibility Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0; 
+            padding: 0; 
+            background-color: #f5f6fa;
+        }
+        h2 {
+            text-align: center; 
+            margin-top: 30px; 
+            color: #2f3640;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 18px;
+            margin-top: 15px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background-color: #2f3640;
+            color: white;
+            font-weight: bold;
+            transition: 0.3s;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #40739e;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        th {
+            background-color: #40739e;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #dcdde1;
+        }
+        .eligible { color: green; font-weight: bold; }
+        .not-eligible { color: red; font-weight: bold; }
+        .progress-bar {
+            width: 100%;
+            background-color: #dcdde1;
+            border-radius: 12px;
+            overflow: hidden;
+            height: 16px;
+            margin-top: 5px;
+        }
+        .progress {
+            height: 16px;
+            text-align: center;
+            color: white;
+            line-height: 16px;
+            font-size: 12px;
+        }
+        .top1 { background-color: gold; }
+        .top2 { background-color: silver; }
+        .top3 { background-color: #cd7f32; }
+        @media screen and (max-width: 600px) {
+            .container { padding: 15px; }
+            th, td { font-size: 12px; padding: 8px; }
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 160px;
+            background-color: #2f3640;
+            color: #fff;
+            text-align: left;
+            padding: 6px;
+            border-radius: 6px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; 
+            left: 50%;
+            margin-left: -80px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Company Eligibility Checker</h2>
+<div class="container">
+    <label>Full Name:</label>
+    <input type="text" id="name" placeholder="Your Name">
+
+    <label>Email:</label>
+    <input type="email" id="email" placeholder="Your Email">
+
+    <label>Year of Study:</label>
+    <select id="year">
+        <option value="1">1st Year</option>
+        <option value="2">2nd Year</option>
+        <option value="3">3rd Year</option>
+        <option value="4">4th Year</option>
+    </select>
+
+    <label>Department:</label>
+    <select id="department">
+        <option value="CSE">CSE</option>
+        <option value="ECE">ECE</option>
+        <option value="MECH">MECH</option>
+        <option value="IT">IT</option>
+        <option value="EEE">EEE</option>
+        <option value="CIVIL">CIVIL</option>
+    </select>
+
+    <label>CGPA:</label>
+    <input type="number" id="cgpa" step="0.01" min="0" max="10">
+
+    <label>Backlogs:</label>
+    <input type="number" id="backlogs" min="0">
+
+    <label>Paste Resume Text:</label>
+    <textarea id="resumeText" rows="5" placeholder="Paste your resume text here"></textarea>
+
+    <label>Paste Job Description Text:</label>
+    <textarea id="jdText" rows="5" placeholder="Paste the job description here"></textarea>
+
+    <button onclick="checkAllCompanies()">Check Eligibility</button>
+    <button onclick="resetForm()">Reset</button>
+</div>
+
+<div id="result" class="container"></div>
+
+<script>
+const companies = {
+    "TCS": { minCgpa: 7, maxBacklogs: 0, departments: ["CSE","ECE","IT"], allowedYears: [3,4] },
+    "Infosys": { minCgpa: 7.5, maxBacklogs: 1, departments: ["CSE","ECE","MECH","EEE"], allowedYears: [3,4] },
+    "Accenture": { minCgpa: 6.5, maxBacklogs: 0, departments: ["CSE","MECH","CIVIL"], allowedYears: [3,4] },
+    "Wipro": { minCgpa: 7, maxBacklogs: 1, departments: ["CSE","ECE","IT"], allowedYears: [3,4] },
+    "Cognizant": { minCgpa: 6.8, maxBacklogs: 1, departments: ["CSE","ECE","IT","MECH"], allowedYears: [3,4] },
+    "IBM": { minCgpa: 7.2, maxBacklogs: 0, departments: ["CSE","ECE","IT"], allowedYears: [3,4] },
+    "Capgemini": { minCgpa: 7, maxBacklogs: 1, departments: ["CSE","ECE","MECH","EEE"], allowedYears: [3,4] }
+};
+
+// Improved skill extraction function
+function extractSkills(text) {
+    const stopwords = ["and","with","of","to","the","a","for","in","on","an","or","as","at","by","is","if","you","me","i","that","also"];
+    const words = text.toLowerCase().match(/\b[a-z0-9+#.]+\b/g) || [];
+    const filtered = words.filter(word => !stopwords.includes(word));
+    return [...new Set(filtered)];
+}
+
+function checkAllCompanies() {
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+    const year = parseInt(document.getElementById("year").value);
+    const dept = document.getElementById("department").value;
+    const cgpa = parseFloat(document.getElementById("cgpa").value);
+    const backlogs = parseInt(document.getElementById("backlogs").value);
+    const resumeText = document.getElementById("resumeText").value;
+    const jdText = document.getElementById("jdText").value;
+
+    const resumeSkills = extractSkills(resumeText);
+    const jdSkills = extractSkills(jdText);
+
+    let results = [];
+
+    for (let companyName in companies) {
+        const comp = companies[companyName];
+        let matchedSkills = resumeSkills.filter(skill => jdSkills.includes(skill));
+        let missingSkills = jdSkills.filter(skill => !resumeSkills.includes(skill));
+        let skillMatchPercent = jdSkills.length > 0 ? Math.round((matchedSkills.length / jdSkills.length) * 100) : 0;
+
+        let eligible = cgpa >= comp.minCgpa && backlogs <= comp.maxBacklogs &&
+                       comp.departments.includes(dept) && skillMatchPercent > 0 &&
+                       comp.allowedYears.includes(year);
+
+        let score = 0;
+        score += Math.min(cgpa / 10 * 40, 40);
+        score += Math.min((comp.maxBacklogs - backlogs + 1)/(comp.maxBacklogs + 1) * 30, 30);
+        score += (comp.departments.includes(dept) ? 20 : 0);
+        score += skillMatchPercent / 100 * 10;
+        score = Math.round(score);
+
+        let reason = [];
+        if (cgpa < comp.minCgpa) reason.push("CGPA below requirement");
+        if (backlogs > comp.maxBacklogs) reason.push("Too many backlogs");
+        if (!comp.departments.includes(dept)) reason.push("Department not eligible");
+        if (skillMatchPercent === 0) reason.push("No matching skills");
+        if (!comp.allowedYears.includes(year)) reason.push("Year of study not eligible");
+
+        results.push({companyName, eligible, score, skillMatchPercent, matchedSkills, missingSkills, reason});
+    }
+
+    // Sort by score descending
+    results.sort((a,b) => b.score - a.score);
+
+    // Display results in table
+    let output = `<h3>Eligibility Results for ${name} (${email})</h3>`;
+    output += `<table>
+                <tr>
+                    <th>Company</th>
+                    <th>Eligibility</th>
+                    <th>Score</th>
+                    <th>Skill Match</th>
+                    <th>Matched Skills</th>
+                    <th>Missing Skills</th>
+                    <th>Reason</th>
+                </tr>`;
+
+    results.forEach((r, index) => {
+        let scoreColor = r.score >= 80 ? 'green' : r.score >= 60 ? 'orange' : 'red';
+        let topClass = index === 0 ? 'top1' : index === 1 ? 'top2' : index === 2 ? 'top3' : '';
+        output += `<tr class="${topClass}">
+            <td>${r.companyName}</td>
+            <td class="${r.eligible ? 'eligible' : 'not-eligible'}">${r.eligible ? 'Eligible ✅' : 'Not Eligible ❌'}</td>
+            <td style="color:${scoreColor}">${r.score}</td>
+            <td>
+                ${r.skillMatchPercent}%
+                <div class="progress-bar">
+                    <div class="progress" style="width:${r.skillMatchPercent}%; background-color:${r.skillMatchPercent>=70?'green':r.skillMatchPercent>=40?'orange':'red'}">${r.skillMatchPercent}%</div>
+                </div>
+            </td>
+            <td>${r.matchedSkills.join(', ') || '-'}</td>
+            <td>${r.missingSkills.join(', ') || '-'}</td>
+            <td>${r.reason.length > 0 ? '<span class="tooltip">Hover<span class="tooltiptext">'+r.reason.join(', ')+'</span></span>' : '-'}</td>
+        </tr>`;
+    });
+
+    output += `</table>`;
+    document.getElementById("result").innerHTML = output;
+}
+
+function resetForm() {
+    document.getElementById("name").value = '';
+    document.getElementById("email").value = '';
+    document.getElementById("year").value = '1';
+    document.getElementById("department").value = 'CSE';
+    document.getElementById("cgpa").value = '';
+    document.getElementById("backlogs").value = '';
+    document.getElementById("resumeText").value = '';
+    document.getElementById("jdText").value = '';
+    document.getElementById("result").innerHTML = '';
+}
+</script>
+
+</body>
+</html>
